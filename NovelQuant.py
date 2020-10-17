@@ -83,18 +83,46 @@ def quantUJ():
 	merged = merged.drop(['source', 'type', 'none1', 'none2', 'info'], axis = 1)
 	merged.to_csv('UJ_counts.txt', index = False, sep = '\t')
 
-path = '/'.join(os.path.realpath(__file__).split('/')[:-1]) + '/bin/'
-mode = sys.argv[1]
+def summarize():
+	parser = argparse.ArgumentParser(usage = 'python NovelQuant sum')
+	parser.add_argument('sum')
+	required = parser.add_argument_group('required arguments')
+	required.add_argument('-r', help = 'Output from quantRI, RI_counts.txt.', dest = 'r')
+	required.add_argument('-u', help = 'Output from quantUJ, UJ_counts.txt.', dest = 'u')
+	required.add_argument('-l', help = 'A list of BAM file(s) to be processed. \
+				Each line should be the path of each bam file.', dest = 'l')
+	required.add_argument('-p', help = 'Path to samtools if not in the environmental variables', dest = 'p')
+	required.add_argument('-t', help = 'Threads to use in samtools.', dest = 't', type = str)	
+	args = parser.parse_args()
 
+	# use samtools to extract total sequencing depth of each sample
+	dep_list = {}
+	for line in open(args.l):
+		sample = line.strip('\n')
+		res = subprocess.Popen(['samtools', 'flagstat', sample, '-@', args.t], stdout = subprocess.PIPE)
+		dep = res.stdout.read()	
+		dep = dep.decode('utf-8').split('\n')[0]
+		dep = int(dep.split(' ')[0])
+		dep_list[sample] = dep
+
+	# merge RI_counts.txt and UJ_counts.txt
+	# if a novel transcript has noth RI and UJ, use RI only
+	RI = pd.read_csv(args.r, comment = '#')
+
+
+path = '/'.join(os.path.realpath(__file__).split('/')[:-1]) + '/bin/'
+
+if len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv[1] == '--help':
+	sys.exit('usage: python NovelQuant.py <mode>' + '\n' + \
+			'modes: findRI, quanRI, findUJ, quantUJ')
+else:
+	mode = sys.argv[1]
 
 if mode == 'findRI':
 	findRI()
-
 if mode == 'quantRI':
 	quantRI()
-
 if mode == 'findUJ':
 	findUJ()
-
 if mode == 'quantUJ':
 	quantUJ()
