@@ -25,6 +25,8 @@ novel_trans_exons = novel_trans_exons[novel_trans_exons['type'] == 'exon']
 
 # check if union intronic regions of annotated genes are included in the novel transcripts
 retained_introns = ''
+# min intronic length to consider
+len_filter = 100
 for i in anno_gene_union_introns.index:
 	in_chr = anno_gene_union_introns.loc[i, 'chromosome']
 	in_start = anno_gene_union_introns.loc[i, 'start']
@@ -42,19 +44,28 @@ for i in anno_gene_union_introns.index:
 			ex_end = tmp_df.loc[k, 'end']
 
 			# full intron retaintion
-			if in_start >= ex_start and in_end <= ex_end:
-				retained_introns += str(in_chr) + '\t' + '*' + '\t' + 'intron' + '\t' + str(in_start) + '\t' + str(in_end) + '\t' \
-				+ 'IR' + '\t' + in_strand + '\t' + '*' + '\t' + tmp_df.loc[k, 'info'] + '\n'
+			if in_start > ex_start and in_end < ex_end:
+				if in_end - in_start >= len_filter:
+					retained_introns += str(in_chr) + '\t' + '*' + '\t' + 'intron' + '\t' + str(in_start) + '\t' + str(in_end) + '\t' \
+					+ 'IR' + '\t' + in_strand + '\t' + '*' + '\t' + tmp_df.loc[k, 'info'] + '\n'
 
-			# alternative 5' splice site
-			if in_start <= ex_end and in_end >= ex_end:
-				retained_introns += str(in_chr) + '\t' + '*' + '\t' + 'intron' + '\t' + str(in_start) + '\t' + str(ex_end) + '\t' \
-				+ 'ALT5' + '\t' + in_strand + '\t' + '*' + '\t' + tmp_df.loc[k, 'info'] + '\n'
+			# exon 3' extension
+			if ex_start < in_start < ex_end and in_end > ex_end:
+				if ex_end - in_start >= len_filter:
+					retained_introns += str(in_chr) + '\t' + '*' + '\t' + 'intron' + '\t' + str(in_start) + '\t' + str(ex_end) + '\t' \
+					+ 'E3E' + '\t' + in_strand + '\t' + '*' + '\t' + tmp_df.loc[k, 'info'] + '\n'
 
-			# alternative 3' splice site
-			if in_start <= ex_start and in_end >= ex_start:
-				retained_introns += str(in_chr) + '\t' + '*' + '\t' + 'intron' + '\t' + str(ex_start) + '\t' + str(in_end) + '\t' \
-				+ 'ALT3' + '\t' + in_strand + '\t' + '*' + '\t' + tmp_df.loc[k, 'info'] + '\n'
+			# exon 5' extension
+			if in_start < ex_start and ex_start < in_end < ex_end:
+				if in_end - ex_start >= len_filter:
+					retained_introns += str(in_chr) + '\t' + '*' + '\t' + 'intron' + '\t' + str(ex_start) + '\t' + str(in_end) + '\t' \
+					+ 'E5E' + '\t' + in_strand + '\t' + '*' + '\t' + tmp_df.loc[k, 'info'] + '\n'
+
+			# cassette exon
+			if in_start < ex_start and in_end > ex_end:
+				if ex_end - ex_start >= len_filter:
+					retained_introns += str(in_chr) + '\t' + '*' + '\t' + 'intron' + '\t' + str(ex_start) + '\t' + str(ex_end) + '\t' \
+					+ 'CE' + '\t' + in_strand + '\t' + '*' + '\t' + tmp_df.loc[k, 'info'] + '\n'
 
 with open('retained_introns.gtf', 'w') as w:
 	w.write(retained_introns)
