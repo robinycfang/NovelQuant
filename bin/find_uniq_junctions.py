@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Find unique junctions of novel transcripts
 
 import pandas as pd

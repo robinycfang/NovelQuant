@@ -1,10 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import argparse
 import subprocess
 import os
 import pandas as pd
+import csv
 
 
 def findRI():
@@ -29,8 +30,8 @@ def quantRI():
 				i.e., the output of findRI, retained_introns.gtf', dest = 'r')
 	required.add_argument('-l', help = 'A list of BAM file(s) to be processed. \
 				Each line should be the path of each bam file.', dest = 'l')
-	required.add_argument('-p', help = 'Path to featureCounts if not in the environmental variables', dest = 'p')
-	required.add_argument('-t', help = 'Threads to use in featureCounts', dest = 't', type = str)
+	required.add_argument('-p', help = 'Path to featureCounts if not in the environmental variables', dest = 'p', default = 'featureCounts')
+	required.add_argument('-t', help = 'Threads to use in featureCounts', dest = 't', type = str, default = '1')
 	args = parser.parse_args()
 
 	# quantify novel transcripts by retained introns
@@ -41,39 +42,49 @@ def quantRI():
 	subprocess.call(cmd)
 
 def findUJ():
-	parser = argparse.ArgumentParser(usage = 'python NovelQuant findUJ -i anno_novel.gtf')
+	parser = argparse.ArgumentParser(usage = 'python NovelQuant findUJ -a annotated.gtf -n novel.gtf')
 	parser.add_argument('findUJ')
 	required = parser.add_argument_group('required arguments')
-	required.add_argument('-i', help = 'The gtf file of exons of both annotated and novel transcripts', dest = 'i')
+	required.add_argument('-a', help = 'The gtf file of exons of annotated transcripts', dest = 'a')
+	required.add_argument('-n', help = 'The gtf file of exons of novel transcripts', dest = 'n')
 	args = parser.parse_args()
 	
+	# concat annotated and novel transcript gtf files
+
 	# extract exon-exon junctions from both annotated and novel transcripts
-	subprocess.call([sys.executable, path + 'extract_junctions.py', args.i])
+	subprocess.call([sys.executable, path + 'extract_junctions.py', args.a, args.n])
 	# find the junctions that are unique to the novel transcripts
 	subprocess.call([sys.executable, path + 'find_uniq_junctions.py', 'eej.gtf'])
 
 def quantUJ():
-	parser = argparse.ArgumentParser(usage = 'python3 NovelQuant quantUJ -i anno_novel.gtf -e uniq_eej.gtf -l sample_list.txt \
+	parser = argparse.ArgumentParser(usage = 'python3 NovelQuant quantUJ -a annotated.gtf -n novel.gtf -e uniq_eej.gtf -l sample_list.txt \
 						-p featureCounts_path -t threads')
 	parser.add_argument('quantUJ')
-	required = parser.add_argument_group('required arguments')
-	required.add_argument('-i', help = 'The gtf file of exons of both annotated and novel transcripts', dest = 'i')	
+	required = parser.add_argument_group('required arguments')	
+	# required.add_argument('-a', help = 'The gtf file of exons of annotated transcripts', dest = 'a')
+	required.add_argument('-n', help = 'The gtf file of exons of novel transcripts', dest = 'n')
 	required.add_argument('-e', help = 'The gtf file of unique junctions. i.e., the output of findUJ, uniq_eej.gtf', dest = 'e')
 	required.add_argument('-l', help = 'A list of BAM file(s) to be processes. \
 				Each line should be the path of each bam file.', dest = 'l')
-	required.add_argument('-p', help = 'Path to featureCounts if not in the environmental variables', dest = 'p')
-	required.add_argument('-t', help = 'Threads to use in featureCounts', dest = 't', type = str)
+	required.add_argument('-p', help = 'Path to featureCounts if not in the environmental variables', dest = 'p', default = 'featureCounts')
+	required.add_argument('-t', help = 'Threads to use in featureCounts', dest = 't', type = str, default = '1')
 	args = parser.parse_args()
 
+	# # concat annotated and novel transcript gtf files
+	# anno_gtf = pd.read_csv(args.a, sep = '\t', header = None, comment = '#')
+	# novel_gtf = pd.read_csv(args.n, sep = '\t', header = None, comment = '#')
+	# both_gtf = pd.concat([anno_gtf, novel_gtf])
+	# both_gtf.to_csv('annotated_novel.gtf', header = False, index = False, sep = '\t', quoting = csv.QUOTE_NONE)
+
 	# use featureCounts to quantify junctions of both annotated and novel transcripts
-	cmd = [args.p, '-a', args.i, '-o', 'all_counts', '-J', '-T', args.t]
+	cmd = [args.p, '-a', args.n, '-o', 'novel_counts', '-J', '-T', args.t]
 	for line in open(args.l):
 		line = line.strip('\n')
 		cmd.append(line)
 	subprocess.call(cmd)
 
 	# find reads upon unique junctions of novel transcripts
-	all_counts = pd.read_csv('all_counts.jcounts', sep = '\t')
+	all_counts = pd.read_csv('novel_counts.jcounts', sep = '\t')
 	all_counts = all_counts.drop(['PrimaryGene', 'SecondaryGenes', 'Site1_strand', 'Site2_chr', 'Site2_strand'], axis = 1)
 	all_counts = all_counts.rename(columns = {'Site1_chr': 'chromosome', 'Site1_location': 'start', 'Site2_location': 'end'})
 	all_counts['start'] = all_counts['start'] + 1
@@ -91,8 +102,8 @@ def summarize():
 	required.add_argument('-u', help = 'Output from quantUJ, UJ_counts.txt.', dest = 'u')
 	required.add_argument('-l', help = 'A list of BAM file(s) to be processed. \
 				Each line should be the path of each bam file.', dest = 'l')
-	required.add_argument('-p', help = 'Path to samtools if not in the environmental variables', dest = 'p')
-	required.add_argument('-t', help = 'Threads to use in samtools.', dest = 't', type = str)	
+	required.add_argument('-p', help = 'Path to samtools if not in the environmental variables', dest = 'p', default = 'samtools')
+	required.add_argument('-t', help = 'Threads to use in samtools.', dest = 't', type = str, default = '1')	
 	args = parser.parse_args()
 
 	# use samtools to extract total sequencing depth of each sample
@@ -126,3 +137,5 @@ if mode == 'findUJ':
 	findUJ()
 if mode == 'quantUJ':
 	quantUJ()
+if mode == 'summarize':
+	summarize()

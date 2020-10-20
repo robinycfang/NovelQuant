@@ -1,4 +1,4 @@
-##!/usr/bin/env python3
+#!/usr/bin/env python3
 
 # Find if any complementary introns of annoated genes are retained in the novel transcripts
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Find the exon-exon junctions of transcripts in a gtf file.
 
 import pandas as pd
@@ -5,11 +7,14 @@ import re
 import sys
 
 try:
-	gtf_path = sys.argv[1]	# this gtf file must contain both annotated and novel transcripts
+    anno_gtf = sys.argv[1]
+    novel_gtf = sys.argv[2]
 except:
-	sys.exit('usage: extract_junctions.py anno_novel_trans.gtf')
+	sys.exit('usage: extract_junctions.py annotated.gtf novel.gtf')
 
-gtf = pd.read_csv(gtf_path, sep = '\t', header = None, comment = '#')
+anno_gtf = pd.read_csv(anno_gtf, sep = '\t', header = None, comment = '#')
+novel_gtf = pd.read_csv(novel_gtf, sep = '\t', header = None, comment = '#')
+gtf = pd.concat([anno_gtf, novel_gtf], ignore_index = True)
 exons = gtf[gtf[2] == 'exon']
 # create the last column to indicate transcript names
 transcripts = []
