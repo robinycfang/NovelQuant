@@ -5,7 +5,7 @@ import argparse
 import subprocess
 import os
 import pandas as pd
-import csv
+# import csv
 
 
 def findRI():
@@ -76,22 +76,39 @@ def quantUJ():
 	# both_gtf = pd.concat([anno_gtf, novel_gtf])
 	# both_gtf.to_csv('annotated_novel.gtf', header = False, index = False, sep = '\t', quoting = csv.QUOTE_NONE)
 
-	# use featureCounts to quantify junctions of both annotated and novel transcripts
-	cmd = [args.p, '-a', args.n, '-o', 'novel_counts', '-J', '-T', args.t]
-	for line in open(args.l):
-		line = line.strip('\n')
-		cmd.append(line)
-	subprocess.call(cmd)
+	sample_num = subprocess.Popen(['wc', '-l', args.l], stdout = subprocess.PIPE)
+	sample_num = int(sample_num.stdout.read().decode('utf-8'))
+	if sample_num <= 10:
+		cmd = [args.p, '-a', args.n, '-o', 'novel_counts', '-J', '-T', args.t]
+		for line in open(args.l):
+			line = line.strip('\n')
+			cmd.append(line)
+		subprocess.call(cmd)
+	else:
+		cmd = [args.p, '-a', args.n, '-o', 'novel_counts_1', '-J', '-T', args.t]
+		counter = 0
+		surfix_name = 1
+		for line in open(args.l):
+			line = line.strip('\n')
+			cmd.append(line)
+			counter += 1
+			if counter % 10 == 0:
+				subprocess.call(cmd)
+				surfix_name += 1
+				cmd = [args.p, '-a', args.n, '-o', 'novel_counts_' + str(surfix_name), '-J', '-T', args.t]
 
-	# find reads upon unique junctions of novel transcripts
-	all_counts = pd.read_csv('novel_counts.jcounts', sep = '\t')
-	all_counts = all_counts.drop(['PrimaryGene', 'SecondaryGenes', 'Site1_strand', 'Site2_chr', 'Site2_strand'], axis = 1)
-	all_counts = all_counts.rename(columns = {'Site1_chr': 'chromosome', 'Site1_location': 'start', 'Site2_location': 'end'})
-	all_counts['start'] = all_counts['start'] + 1
-	all_counts['end'] = all_counts['end'] - 1
 	uniq_eej = pd.read_csv(args.e, sep = '\t')
-	merged = pd.merge(uniq_eej, all_counts, how = 'inner', on = ['chromosome', 'start', 'end'], sort = True)
-	merged = merged.drop(['source', 'type', 'none1', 'none2', 'info'], axis = 1)
+	uniq_eej = uniq_eej.drop(['source', 'type', 'none1', 'none2', 'info'], axis = 1)
+	merged = uniq_eej.copy()
+	for i in os.listdir():
+		if 'jcounts' in i:
+			all_counts = pd.read_csv(i, sep = '\t')
+			all_counts = all_counts.drop(['PrimaryGene', 'SecondaryGenes', 'Site1_strand', 'Site2_chr', 'Site2_strand'], axis = 1)
+			all_counts = all_counts.rename(columns = {'Site1_chr': 'chromosome', 'Site1_location': 'start', 'Site2_location': 'end'})
+			all_counts['start'] = all_counts['start'] + 1
+			all_counts['end'] = all_counts['end'] - 1
+			merged = pd.merge(merged, all_counts, how = 'left', on = ['chromosome', 'start', 'end'], sort = True)
+	merged = merged.fillna(0)
 	merged.to_csv('UJ_counts.txt', index = False, sep = '\t')
 
 def summarize():
