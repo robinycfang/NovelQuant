@@ -5,7 +5,6 @@ import argparse
 import subprocess
 import os
 import pandas as pd
-# import csv
 
 
 def findRI():
@@ -48,8 +47,6 @@ def findUJ():
 	required.add_argument('-a', help = 'The gtf file of exons of annotated transcripts', dest = 'a')
 	required.add_argument('-n', help = 'The gtf file of exons of novel transcripts', dest = 'n')
 	args = parser.parse_args()
-	
-	# concat annotated and novel transcript gtf files
 
 	# extract exon-exon junctions from both annotated and novel transcripts
 	subprocess.call([sys.executable, path + 'extract_junctions.py', args.a, args.n])
@@ -64,17 +61,11 @@ def quantUJ():
 	# required.add_argument('-a', help = 'The gtf file of exons of annotated transcripts', dest = 'a')
 	required.add_argument('-n', help = 'The gtf file of exons of novel transcripts', dest = 'n')
 	required.add_argument('-e', help = 'The gtf file of unique junctions. i.e., the output of findUJ, uniq_eej.gtf', dest = 'e')
-	required.add_argument('-l', help = 'A list of BAM file(s) to be processes. \
+	required.add_argument('-l', help = 'A list of BAM file(s) to be processed. \
 				Each line should be the path of each bam file.', dest = 'l')
 	required.add_argument('-p', help = 'Path to featureCounts if not in the environmental variables', dest = 'p', default = 'featureCounts')
 	required.add_argument('-t', help = 'Threads to use in featureCounts', dest = 't', type = str, default = '1')
 	args = parser.parse_args()
-
-	# # concat annotated and novel transcript gtf files
-	# anno_gtf = pd.read_csv(args.a, sep = '\t', header = None, comment = '#')
-	# novel_gtf = pd.read_csv(args.n, sep = '\t', header = None, comment = '#')
-	# both_gtf = pd.concat([anno_gtf, novel_gtf])
-	# both_gtf.to_csv('annotated_novel.gtf', header = False, index = False, sep = '\t', quoting = csv.QUOTE_NONE)
 
 	sample_num = subprocess.Popen(['wc', '-l', args.l], stdout = subprocess.PIPE)
 	sample_num = int(sample_num.stdout.read().decode('utf-8'))
@@ -92,7 +83,7 @@ def quantUJ():
 			line = line.strip('\n')
 			cmd.append(line)
 			counter += 1
-			if counter % 10 == 0:
+			if counter % 10 == 0 or counter == sample_num:
 				subprocess.call(cmd)
 				surfix_name += 1
 				cmd = [args.p, '-a', args.n, '-o', 'novel_counts_' + str(surfix_name), '-J', '-T', args.t]
@@ -110,6 +101,8 @@ def quantUJ():
 			merged = pd.merge(merged, all_counts, how = 'left', on = ['chromosome', 'start', 'end'], sort = True)
 	merged = merged.fillna(0)
 	merged.to_csv('UJ_counts.txt', index = False, sep = '\t')
+	# remove redundant featureCounts outputs (using shell = True to avoid the error caused by qutations)
+	subprocess.call('rm novel_counts_*', shell = True)
 
 def summarize():
 	parser = argparse.ArgumentParser(usage = 'python NovelQuant sum')
@@ -123,8 +116,36 @@ def summarize():
 	required.add_argument('-t', help = 'Threads to use in samtools.', dest = 't', type = str, default = '1')	
 	args = parser.parse_args()
 
+	# merge RI_counts.txt and UJ_counts.txt
+	# if a novel transcript has both RI and UJ, use RI only
+	sum_table = pd.DataFrame()
+	RI_list = []
+	RI = pd.read_csv(args.r, sep = '\t', comment = '#')
+	for i in RI.index:
+		trans = RI.loc[i, 'Geneid']
+		RI_list.append(trans)
+		for k in RI.columns[6:]:
+			sum_table.loc[trans, k] = RI.loc[i, k]
+
+	UJ = pd.read_csv(args.u, sep = '\t')
+	UJ_list = set(UJ['transcript'])
+	for i in UJ_list:
+		if i not in RI_list:
+			tmp = UJ[UJ['transcript'] == i].reset_index()
+			# for the novel transcripts with only one unique junction
+			if len(tmp) == 1:
+				for k in tmp.columns[6:]:
+					sum_table.loc[i, k] = tmp.loc[0, k]
+			# for the novel transcripts with multiple unique junctions, get the means
+			else:
+				tmp = tmp.iloc[:, 6:].mean().to_frame().T
+				for k in tmp.columns:
+					sum_table.loc[i, k] = tmp.loc[0, k]
+	sum_table.to_csv('summary_raw.txt', sep = '\t', index = True)
+
 	# use samtools to extract total sequencing depth of each sample
 	dep_list = {}
+	dep_holder = ''
 	for line in open(args.l):
 		sample = line.strip('\n')
 		res = subprocess.Popen(['samtools', 'flagstat', sample, '-@', args.t], stdout = subprocess.PIPE)
@@ -132,17 +153,22 @@ def summarize():
 		dep = dep.decode('utf-8').split('\n')[0]
 		dep = int(dep.split(' ')[0])
 		dep_list[sample] = dep
+		dep_holder += sample + '\t' + str(dep) + '\n'
+	with open('sample_depth.txt', 'w') as w:
+		w.write(dep_holder)
 
-	# merge RI_counts.txt and UJ_counts.txt
-	# if a novel transcript has noth RI and UJ, use RI only
-	RI = pd.read_csv(args.r, comment = '#')
+	# normalization
+	for sample in sum_table.columns:
+		dep = dep_list[sample]
+		sum_table[sample] = sum_table[sample] * 1000000000 / dep
+	sum_table.to_csv('summary_norm.txt', sep = '\t', index = True)
 
 
 path = '/'.join(os.path.realpath(__file__).split('/')[:-1]) + '/bin/'
 
 if len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv[1] == '--help':
 	sys.exit('usage: python NovelQuant.py <mode>' + '\n' + \
-			'modes: findRI, quanRI, findUJ, quantUJ')
+			'modes: findRI, quantRI, findUJ, quantUJ, sum')
 else:
 	mode = sys.argv[1]
 
@@ -154,5 +180,5 @@ if mode == 'findUJ':
 	findUJ()
 if mode == 'quantUJ':
 	quantUJ()
-if mode == 'summarize':
+if mode == 'sum':
 	summarize()
