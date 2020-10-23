@@ -116,52 +116,7 @@ def summarize():
 	required.add_argument('-t', help = 'Threads to use in samtools.', dest = 't', type = str, default = '1')	
 	args = parser.parse_args()
 
-	# merge RI_counts.txt and UJ_counts.txt
-	# if a novel transcript has both RI and UJ, use RI only
-	sum_table = pd.DataFrame()
-	RI_list = []
-	RI = pd.read_csv(args.r, sep = '\t', comment = '#')
-	for i in RI.index:
-		trans = RI.loc[i, 'Geneid']
-		RI_list.append(trans)
-		for k in RI.columns[6:]:
-			sum_table.loc[trans, k] = RI.loc[i, k]
-
-	UJ = pd.read_csv(args.u, sep = '\t')
-	UJ_list = set(UJ['transcript'])
-	for i in UJ_list:
-		if i not in RI_list:
-			tmp = UJ[UJ['transcript'] == i].reset_index()
-			# for the novel transcripts with only one unique junction
-			if len(tmp) == 1:
-				for k in tmp.columns[6:]:
-					sum_table.loc[i, k] = tmp.loc[0, k]
-			# for the novel transcripts with multiple unique junctions, get the means
-			else:
-				tmp = tmp.iloc[:, 6:].mean().to_frame().T
-				for k in tmp.columns:
-					sum_table.loc[i, k] = tmp.loc[0, k]
-	sum_table.to_csv('summary_raw.txt', sep = '\t', index = True)
-
-	# use samtools to extract total sequencing depth of each sample
-	dep_list = {}
-	dep_holder = ''
-	for line in open(args.l):
-		sample = line.strip('\n')
-		res = subprocess.Popen(['samtools', 'flagstat', sample, '-@', args.t], stdout = subprocess.PIPE)
-		dep = res.stdout.read()	
-		dep = dep.decode('utf-8').split('\n')[0]
-		dep = int(dep.split(' ')[0])
-		dep_list[sample] = dep
-		dep_holder += sample + '\t' + str(dep) + '\n'
-	with open('sample_depth.txt', 'w') as w:
-		w.write(dep_holder)
-
-	# normalization
-	for sample in sum_table.columns:
-		dep = dep_list[sample]
-		sum_table[sample] = sum_table[sample] * 1000000000 / dep
-	sum_table.to_csv('summary_norm.txt', sep = '\t', index = True)
+	subprocess.call([sys.executable, path + 'summarize.py', args.r, args.u, args.l, args.p, args.t])
 
 
 path = '/'.join(os.path.realpath(__file__).split('/')[:-1]) + '/bin/'

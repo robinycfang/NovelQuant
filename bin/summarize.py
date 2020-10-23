@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import sys
-import argparse
 import subprocess
 import pandas as pd
+
 
 try:
 	RI = sys.argv[1]
@@ -14,36 +14,50 @@ try:
 except:
 	sys.exit('usage: python summarize.py RI_counts.txt UJ_counts.txt sample_list.txt samtools_path threads')
 
+
 # merge RI_counts.txt and UJ_counts.txt
-RI = pd.read_csv(RI, comment = '#', sep = '\t', index_col = 0)
-RI = RI.drop(['Chr', 'Start', 'End', 'Strand', 'Length'], axis = 1)
-sum_table = RI.copy()
-UJ = pd.read_csv(UJ, comment = '#', sep = '\t')
-UJ = UJ.drop(['chromosome', 'start', 'end', 'strand', 'gene'], axis = 1)
+# if a novel transcript has both RI and UJ, use RI only
+sum_table = pd.DataFrame()
+RI_list = []
+RI = pd.read_csv(RI, sep = '\t', comment = '#')
+for i in RI.index:
+	trans = RI.loc[i, 'Geneid']
+	RI_list.append(trans)
+	for k in RI.columns[6:]:
+		sum_table.loc[trans, k] = RI.loc[i, k]
+
+UJ = pd.read_csv(UJ, sep = '\t')
 UJ_list = set(UJ['transcript'])
 for i in UJ_list:
-	# if a novel transcript has noth RI and UJ, use RI only
-	# if a novel transcript has more than one unique junction, then use the mean of all junction reads
-	if i not in RI.index:
-		temp = UJ[UJ['transcript'] == i]
-		for k in temp.columns:
-			if k != 'transcript':
-				sum_table.loc[i, k] = temp[k].mean()
+	if i not in RI_list:
+		tmp = UJ[UJ['transcript'] == i].reset_index()
+		# for the novel transcripts with only one unique junction
+		if len(tmp) == 1:
+			for k in tmp.columns[7:]:
+				sum_table.loc[i, k] = tmp.loc[0, k]
+		# for the novel transcripts with multiple unique junctions, get the means
+		else:
+			tmp = tmp.iloc[:, 7:].mean().to_frame().T
+			for k in tmp.columns:
+				sum_table.loc[i, k] = tmp.loc[0, k]
+sum_table.to_csv('summary_raw.txt', sep = '\t', index = True)
 
 # use samtools to extract total sequencing depth of each sample
-dep_table = pd.DataFrame(columns = ['depth'])
+dep_list = {}
+dep_holder = ''
 for line in open(sample_list):
 	sample = line.strip('\n')
-	print(sample)
 	res = subprocess.Popen([st, 'flagstat', sample, '-@', threads], stdout = subprocess.PIPE)
 	dep = res.stdout.read()	
 	dep = dep.decode('utf-8').split('\n')[0]
 	dep = int(dep.split(' ')[0])
-	dep_table.loc[sample, 'depth'] = dep
-dep_table.to_csv('seq_dep.txt', sep = '\t')
+	dep_list[sample] = dep
+	dep_holder += sample + '\t' + str(dep) + '\n'
+with open('sample_depth.txt', 'w') as w:
+	w.write(dep_holder)
 
 # normalization
-for i in sum_table.columns:
-	depth = dep_table.loc[i, 'depth']
-	sum_table[i] = sum_table[i] * 1000000000 / depth
-sum_table.to_csv('NovelQuant_result.txt', sep = '\t')
+for sample in sum_table.columns:
+	dep = dep_list[sample]
+	sum_table[sample] = sum_table[sample] * 1000000000 / dep
+sum_table.to_csv('summary_norm.txt', sep = '\t', index = True)
