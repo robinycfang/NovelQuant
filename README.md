@@ -1,3 +1,5 @@
 # NovelQuant
 
-well...just like what it says...quantification of novel transcripts...
+## Step 1: find retained introns
+
+`python NovelQuant.py findRI -a annotated.gtf -n novel.gtf`
