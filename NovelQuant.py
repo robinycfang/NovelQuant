@@ -68,7 +68,7 @@ def quantUJ():
 	args = parser.parse_args()
 
 	sample_num = subprocess.Popen(['wc', '-l', args.l], stdout = subprocess.PIPE)
-	sample_num = int(sample_num.stdout.read().decode('utf-8'))
+	sample_num = int(sample_num.stdout.read().decode('utf-8').split(' ')[0])
 	if sample_num <= 10:
 		cmd = [args.p, '-a', args.n, '-o', 'novel_counts', '-J', '-T', args.t]
 		for line in open(args.l):
@@ -102,17 +102,17 @@ def quantUJ():
 	merged = merged.fillna(0)
 	merged.to_csv('UJ_counts.txt', index = False, sep = '\t')
 	# remove redundant featureCounts outputs (using shell = True to avoid the error caused by qutations)
-	subprocess.call('rm novel_counts_*', shell = True)
+	subprocess.call('rm novel_counts*', shell = True)
 
 def summarize():
-	parser = argparse.ArgumentParser(usage = 'python NovelQuant sum')
+	parser = argparse.ArgumentParser(usage = 'python NovelQuant sum -r RI_counts.txt -u UJ_counts.txt -l sample_list.txt -p samtools_path -t threads')
 	parser.add_argument('sum')
 	required = parser.add_argument_group('required arguments')
 	required.add_argument('-r', help = 'Output from quantRI, RI_counts.txt.', dest = 'r')
 	required.add_argument('-u', help = 'Output from quantUJ, UJ_counts.txt.', dest = 'u')
 	required.add_argument('-l', help = 'A list of BAM file(s) to be processed. \
 				Each line should be the path of each bam file.', dest = 'l')
-	required.add_argument('-p', help = 'Path to samtools if not in the environmental variables', dest = 'p', default = 'samtools')
+	required.add_argument('-p', help = 'Path to samtools if not in the environment variables', dest = 'p', default = 'samtools')
 	required.add_argument('-t', help = 'Threads to use in samtools.', dest = 't', type = str, default = '1')	
 	args = parser.parse_args()
 

@@ -40,7 +40,7 @@ for i in UJ_list:
 			tmp = tmp.iloc[:, 7:].mean().to_frame().T
 			for k in tmp.columns:
 				sum_table.loc[i, k] = tmp.loc[0, k]
-sum_table.to_csv('summary_raw.txt', sep = '\t', index = True)
+#sum_table.to_csv('summary_raw.txt', sep = '\t', index = True)
 
 # use samtools to extract total sequencing depth of each sample
 dep_list = {}
@@ -60,4 +60,4 @@ with open('sample_depth.txt', 'w') as w:
 for sample in sum_table.columns:
 	dep = dep_list[sample]
 	sum_table[sample] = sum_table[sample] * 1000000000 / dep
-sum_table.to_csv('summary_norm.txt', sep = '\t', index = True)
+sum_table.to_csv('NovelQuant_final.txt', sep = '\t', index = True)
