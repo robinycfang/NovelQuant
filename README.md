@@ -31,7 +31,7 @@
 
 ## Step 4: quantify on unique junctions
 
-`python3 NovelQuant quantUJ -a annotated.gtf -n novel.gtf -e uniq_eej.gtf -l sample_list.txt -p featureCounts_path -t threads`
+`python NovelQuant quantUJ -a annotated.gtf -n novel.gtf -e uniq_eej.gtf -l sample_list.txt -p featureCounts_path -t threads`
 
 | Parameter | Description |
 |-----------|-------------|
@@ -54,4 +54,4 @@
 | -p | Path to samtools if not in the environment variables |
 | -t | Threads to use in samtools. Default: 1 |
 
-The first column in the final output, NovelQuant_final.txt, represents the names of novel transcripts. The rest of columns represent expression of novel transcripts normalized to total sequencing depth in the sample processed.
+The first column in the final output, NovelQuant_final.txt, represents the names of novel transcripts. The rest of columns represent expression of novel transcripts normalized to total sequencing depth in the samples processed.
