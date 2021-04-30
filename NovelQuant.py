@@ -54,11 +54,10 @@ def findUJ():
 	subprocess.call([sys.executable, path + 'find_uniq_junctions.py', 'eej.gtf'])
 
 def quantUJ():
-	parser = argparse.ArgumentParser(usage = 'python3 NovelQuant quantUJ -a annotated.gtf -n novel.gtf -e uniq_eej.gtf -l sample_list.txt \
+	parser = argparse.ArgumentParser(usage = 'python3 NovelQuant quantUJ -n novel.gtf -e uniq_eej.gtf -l sample_list.txt \
 						-p featureCounts_path -t threads')
 	parser.add_argument('quantUJ')
 	required = parser.add_argument_group('required arguments')	
-	# required.add_argument('-a', help = 'The gtf file of exons of annotated transcripts', dest = 'a')
 	required.add_argument('-n', help = 'The gtf file of exons of novel transcripts', dest = 'n')
 	required.add_argument('-e', help = 'The gtf file of unique junctions. i.e., the output of findUJ, uniq_eej.gtf', dest = 'e')
 	required.add_argument('-l', help = 'A list of BAM file(s) to be processed. \
