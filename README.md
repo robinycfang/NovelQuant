@@ -31,11 +31,10 @@
 
 ## Step 4: quantify on unique junctions
 
-`python NovelQuant quantUJ -a annotated.gtf -n novel.gtf -e uniq_eej.gtf -l sample_list.txt -p featureCounts_path -t threads`
+`python NovelQuant quantUJ -n novel.gtf -e uniq_eej.gtf -l sample_list.txt -p featureCounts_path -t threads`
 
 | Parameter | Description |
 |-----------|-------------|
-| -a | The gtf file containing information of annotated transcripts. e.g., Gencode annotation |
 | -n | The gtf file containing information of novel transcripts. Must have exon information. |
 | -e | The gtf file of unique junctions. i.e., the output of findUJ, uniq_eej.gtf |
 | -l | A list of BAM file(s) to be processed. Each line should be the path of each BAM file. |
