@@ -43,7 +43,7 @@
 
 ## Step 5: summarize everything
 
-`python NovelQuant sum -r RI_counts.txt -u UJ_counts.txt -l sample_list.txt -p samtools_path -t threads`
+`python NovelQuant sum -r RI_counts.txt -u UJ_counts.txt -l sample_list.txt -p samtools_path`
 
 | Parameter | Description |
 |-----------|-------------|
@@ -51,6 +51,5 @@
 | -u | Output from quantUJ, UJ_counts.txt. |
 | -l | A list of BAM file(s) to be processed. Each line should be the path of each BAM file. |
 | -p | Path to samtools if not in the environment variables |
-| -t | Threads to use in samtools. Default: 1 |
 
 The first column in the final output, NovelQuant_final.txt, represents the names of novel transcripts. The rest of columns represent expression of novel transcripts normalized to total sequencing depth in the samples processed.
