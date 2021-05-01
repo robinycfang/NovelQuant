@@ -10,9 +10,8 @@ try:
 	UJ = sys.argv[2]
 	sample_list = sys.argv[3]
 	st = sys.argv[4]
-	threads = sys.argv[5]
 except:
-	sys.exit('usage: python summarize.py RI_counts.txt UJ_counts.txt sample_list.txt samtools_path threads')
+	sys.exit('usage: python summarize.py RI_counts.txt UJ_counts.txt sample_list.txt samtools_path')
 
 
 # merge RI_counts.txt and UJ_counts.txt
@@ -47,7 +46,7 @@ dep_list = {}
 dep_holder = ''
 for line in open(sample_list):
 	sample = line.strip('\n')
-	res = subprocess.Popen([st, 'flagstat', sample, '-@', threads], stdout = subprocess.PIPE)
+	res = subprocess.Popen([st, 'flagstat', sample], stdout = subprocess.PIPE)
 	dep = res.stdout.read()	
 	dep = dep.decode('utf-8').split('\n')[0]
 	dep = int(dep.split(' ')[0])

@@ -104,18 +104,17 @@ def quantUJ():
 	subprocess.call('rm novel_counts*', shell = True)
 
 def summarize():
-	parser = argparse.ArgumentParser(usage = 'python NovelQuant sum -r RI_counts.txt -u UJ_counts.txt -l sample_list.txt -p samtools_path -t threads')
+	parser = argparse.ArgumentParser(usage = 'python NovelQuant sum -r RI_counts.txt -u UJ_counts.txt -l sample_list.txt -p samtools_path')
 	parser.add_argument('sum')
 	required = parser.add_argument_group('required arguments')
 	required.add_argument('-r', help = 'Output from quantRI, RI_counts.txt.', dest = 'r')
 	required.add_argument('-u', help = 'Output from quantUJ, UJ_counts.txt.', dest = 'u')
 	required.add_argument('-l', help = 'A list of BAM file(s) to be processed. \
 				Each line should be the path of each bam file.', dest = 'l')
-	required.add_argument('-p', help = 'Path to samtools if not in the environment variables', dest = 'p', default = 'samtools')
-	required.add_argument('-t', help = 'Threads to use in samtools.', dest = 't', type = str, default = '1')	
+	required.add_argument('-p', help = 'Path to samtools if not in the environment variables', dest = 'p', default = 'samtools')	
 	args = parser.parse_args()
 
-	subprocess.call([sys.executable, path + 'summarize.py', args.r, args.u, args.l, args.p, args.t])
+	subprocess.call([sys.executable, path + 'summarize.py', args.r, args.u, args.l, args.p])
 
 
 path = '/'.join(os.path.realpath(__file__).split('/')[:-1]) + '/bin/'
