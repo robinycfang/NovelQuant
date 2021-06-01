@@ -75,6 +75,7 @@ Optionally, follow this command to calculate expression percentages of annotated
 | -r | Output from quantRI, RI_counts.txt. |
 | -u | Output from quantUJ, UJ_counts.txt. |
 | -l | A list of BAM file(s) to be processed. Each line should be the path of each BAM file. |
+| -st | Path to samtools if not in the environment variables |
 | -a | The gtf file containing information of annotated transcripts. e.g., Gencode annotation |
 | -n | The gtf file containing information of novel transcripts. Must have exon information. |
 | -fc | Path to featureCounts if not in the environment variables |
