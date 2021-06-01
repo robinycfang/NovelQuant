@@ -21,16 +21,15 @@ def findRI():
 	subprocess.call([sys.executable, path + 'find_retained_introns.py', 'anno_gene_complementary_introns.gtf', args.n])
 
 def quantRI():
-	parser = argparse.ArgumentParser(usage = 'python NovelQuant quantRI -r retained_introns.gtf \
-						-l sample_list.txt -p featureCounts_path -t threads')
+	parser = argparse.ArgumentParser(usage = 'python NovelQuant quantRI -r retained_introns.gtf -l sample_list.txt')
 	parser.add_argument('quantRI')
 	required = parser.add_argument_group('required arguments')
 	required.add_argument('-r', help = 'The gtf file of introns that are retained in novel transcripts.\
 				i.e., the output of findRI, retained_introns.gtf', dest = 'r')
 	required.add_argument('-l', help = 'A list of BAM file(s) to be processed. \
 				Each line should be the path of each bam file.', dest = 'l')
-	required.add_argument('-p', help = 'Path to featureCounts if not in the environmental variables', dest = 'p', default = 'featureCounts')
-	required.add_argument('-t', help = 'Threads to use in featureCounts', dest = 't', type = str, default = '1')
+	parser.add_argument('-p', help = 'Path to featureCounts if not in the environmental variables', dest = 'p', default = 'featureCounts')
+	parser.add_argument('-t', help = 'Threads to use in featureCounts', dest = 't', type = str, default = '1')
 	args = parser.parse_args()
 
 	# quantify novel transcripts by retained introns
@@ -54,16 +53,15 @@ def findUJ():
 	subprocess.call([sys.executable, path + 'find_uniq_junctions.py', 'eej.gtf'])
 
 def quantUJ():
-	parser = argparse.ArgumentParser(usage = 'python3 NovelQuant quantUJ -n novel.gtf -e uniq_eej.gtf -l sample_list.txt \
-						-p featureCounts_path -t threads')
+	parser = argparse.ArgumentParser(usage = 'python3 NovelQuant quantUJ -n novel.gtf -e uniq_eej.gtf -l sample_list.txt')
 	parser.add_argument('quantUJ')
 	required = parser.add_argument_group('required arguments')	
 	required.add_argument('-n', help = 'The gtf file of exons of novel transcripts', dest = 'n')
 	required.add_argument('-e', help = 'The gtf file of unique junctions. i.e., the output of findUJ, uniq_eej.gtf', dest = 'e')
 	required.add_argument('-l', help = 'A list of BAM file(s) to be processed. \
 				Each line should be the path of each bam file.', dest = 'l')
-	required.add_argument('-p', help = 'Path to featureCounts if not in the environmental variables', dest = 'p', default = 'featureCounts')
-	required.add_argument('-t', help = 'Threads to use in featureCounts', dest = 't', type = str, default = '1')
+	parser.add_argument('-p', help = 'Path to featureCounts if not in the environmental variables', dest = 'p', default = 'featureCounts')
+	parser.add_argument('-t', help = 'Threads to use in featureCounts', dest = 't', type = str, default = '1')
 	args = parser.parse_args()
 
 	sample_num = subprocess.Popen(['wc', '-l', args.l], stdout = subprocess.PIPE)
@@ -104,17 +102,22 @@ def quantUJ():
 	subprocess.call('rm novel_counts*', shell = True)
 
 def summarize():
-	parser = argparse.ArgumentParser(usage = 'python NovelQuant sum -r RI_counts.txt -u UJ_counts.txt -l sample_list.txt -p samtools_path')
+	parser = argparse.ArgumentParser(usage = 'python NovelQuant sum -r RI_counts.txt -u UJ_counts.txt -l sample_list.txt')
 	parser.add_argument('sum')
 	required = parser.add_argument_group('required arguments')
 	required.add_argument('-r', help = 'Output from quantRI, RI_counts.txt.', dest = 'r')
 	required.add_argument('-u', help = 'Output from quantUJ, UJ_counts.txt.', dest = 'u')
 	required.add_argument('-l', help = 'A list of BAM file(s) to be processed. \
 				Each line should be the path of each bam file.', dest = 'l')
-	required.add_argument('-p', help = 'Path to samtools if not in the environment variables', dest = 'p', default = 'samtools')	
+	parser.add_argument('-st', help = 'Path to samtools if not in the environment variables', dest = 'st', default = 'samtools')
+	parser.add_argument('-a', help = 'The gtf file that has annotated transcript information', dest = 'a')
+	parser.add_argument('-n', help = 'The gtf file that has novel transcript information', dest = 'n')
+	parser.add_argument('-fc', help = 'Path to featureCounts if not in the environmental variables', dest = 'fc', default = 'featureCounts')
+	parser.add_argument('-t', help = 'Threads to use in featureCounts', dest = 't', type = str, default = '1')
+
 	args = parser.parse_args()
 
-	subprocess.call([sys.executable, path + 'summarize.py', args.r, args.u, args.l, args.p])
+	subprocess.call([sys.executable, path + 'summarize.py', args.r, args.u, args.l, args.st, args.a, args.n, args.fc, args.t])
 
 
 path = '/'.join(os.path.realpath(__file__).split('/')[:-1]) + '/bin/'
