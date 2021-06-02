@@ -110,6 +110,7 @@ def summarize():
 	required.add_argument('-l', help = 'A list of BAM file(s) to be processed. \
 				Each line should be the path of each bam file.', dest = 'l')
 	parser.add_argument('-st', help = 'Path to samtools if not in the environment variables', dest = 'st', default = 'samtools')
+	parser.add_argument('--CalExpPerc', default = False, action = 'store_true', dest = 'cal')
 	parser.add_argument('-a', help = 'The gtf file that has annotated transcript information', dest = 'a')
 	parser.add_argument('-n', help = 'The gtf file that has novel transcript information', dest = 'n')
 	parser.add_argument('-fc', help = 'Path to featureCounts if not in the environmental variables', dest = 'fc', default = 'featureCounts')
@@ -117,8 +118,10 @@ def summarize():
 
 	args = parser.parse_args()
 
-	subprocess.call([sys.executable, path + 'summarize.py', args.r, args.u, args.l, args.st, args.a, args.n, args.fc, args.t])
-
+	if args.cal:
+		subprocess.call([sys.executable, path + 'summarize.py', args.r, args.u, args.l, args.st, args.a, args.n, args.fc, args.t])
+	else:
+		subprocess.call([sys.executable, path + 'summarize.py', args.r, args.u, args.l, args.st])
 
 path = '/'.join(os.path.realpath(__file__).split('/')[:-1]) + '/bin/'
 
