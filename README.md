@@ -68,7 +68,7 @@ The first column in the final output, `NovelQuant_final.txt`, represents the nam
 
 Optionally, follow this command to calculate expression percentages of annotated and novel transcripts in each gene.
 
-`python NovelQuant sum -r RI_counts.txt -u UJ_counts.txt -l sample_list.txt -st samtools_path -a annotated.gtf -n novel.gtf -fc featureCounts_path -t threads`
+`python NovelQuant sum -r RI_counts.txt -u UJ_counts.txt -l sample_list.txt -st samtools_path --CalExpPerc -a annotated.gtf -n novel.gtf -fc featureCounts_path -t threads`
 
 | Parameter | Description |
 |-----------|-------------|
@@ -76,6 +76,7 @@ Optionally, follow this command to calculate expression percentages of annotated
 | -u | Output from quantUJ, UJ_counts.txt. |
 | -l | A list of BAM file(s) to be processed. Each line should be the path of each BAM file. |
 | -st | Path to samtools if not in the environment variables |
+| --CalExpPerc | Calculate expression percentages of annotaed and novel transcripts in each gene |
 | -a | The gtf file containing information of annotated transcripts. e.g., Gencode annotation |
 | -n | The gtf file containing information of novel transcripts. Must have exon information. |
 | -fc | Path to featureCounts if not in the environment variables |
