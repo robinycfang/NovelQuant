@@ -2,9 +2,15 @@
 
 NovelQuant takes GTF files of annotated and novel transcripts as inputs, and identifies unique regions (retained introns and unique junctions) in the novel transcripts, relative to annotated transcripts. NovelQuant then works on BAM files (can be either short and long reads) of the samples of your interest and counts reads falling upon the unique regions to quantify the novel transcripts. Optionally, under a statistical assumption, an expression normalization can be conducted to calculate expression percentages of annotated and novel transcripts within each gene, which enables their relative comparision. 
 
+## Citation
+
+If you use NovelQuant in your study, please cite:
+
+Fang, Y.\*, Chen, G.\*, Chen, F., Hu, E., Dong, X., Li, Z., He, L., Sun, Y., Qiu, L., Xu, H., Cai, Z.# and Liu, X.#, 2021. Accurate transcriptome assembly by Nanopore RNA-seq reveals novel functional transcripts in hepatocellular carcinoma. Under review.
+
 ## Step 1: find retained introns
 
-NovelQuant compares GTF files of annotated and novel transcripts, and searches for intronic regions that are retained in the novel transcripts.
+NovelQuant compares GTF files of annotated and novel transcripts, and searches for intronic regions that are retained in the novel transcripts. 
 
 `python NovelQuant.py findRI -a annotated.gtf -n novel.gtf`
 
