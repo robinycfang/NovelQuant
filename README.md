@@ -36,7 +36,7 @@ Uses featureCounts to count reads falling upon retained introns identified in th
 
 NovelQuant compares GTF files of annotated and novel transcripts, and searches for exon-exon junctions that are unique in the novel transcripts.
 
-`python NovelQuant findUJ -a annotated.gtf -n novel.gtf`
+`python NovelQuant.py findUJ -a annotated.gtf -n novel.gtf`
 
 | Parameter | Description |
 |-----------|-------------|
@@ -47,7 +47,7 @@ NovelQuant compares GTF files of annotated and novel transcripts, and searches f
 
 Uses featureCounts to count junction reads spanning the unique junctions that are identified in Step 3.
 
-`python NovelQuant quantUJ -n novel.gtf -e uniq_eej.gtf -l sample_list.txt -p featureCounts_path -t threads`
+`python NovelQuant.py quantUJ -n novel.gtf -e uniq_eej.gtf -l sample_list.txt -p featureCounts_path -t threads`
 
 | Parameter | Description |
 |-----------|-------------|
@@ -61,7 +61,7 @@ Uses featureCounts to count junction reads spanning the unique junctions that ar
 
 Merges results of quantRI and quantUJ, and normalize to total sequencing depth of each sample.
 
-`python NovelQuant sum -r RI_counts.txt -u UJ_counts.txt -l sample_list.txt -st samtools_path`
+`python NovelQuant.py sum -r RI_counts.txt -u UJ_counts.txt -l sample_list.txt -st samtools_path`
 
 | Parameter | Description |
 |-----------|-------------|
@@ -74,7 +74,7 @@ The first column in the final output, `NovelQuant_final.txt`, represents the nam
 
 Optionally, follow this command to calculate expression percentages of annotated and novel transcripts in each gene.
 
-`python NovelQuant sum -r RI_counts.txt -u UJ_counts.txt -l sample_list.txt -st samtools_path --CalExpPerc -a annotated.gtf -n novel.gtf -fc featureCounts_path -t threads`
+`python NovelQuant.py sum -r RI_counts.txt -u UJ_counts.txt -l sample_list.txt -st samtools_path --CalExpPerc -a annotated.gtf -n novel.gtf -fc featureCounts_path -t threads`
 
 | Parameter | Description |
 |-----------|-------------|
