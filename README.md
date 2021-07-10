@@ -6,7 +6,7 @@ NovelQuant takes GTF files of annotated and novel transcripts as inputs, and ide
 
 If you use NovelQuant in your study, please cite:
 
-Fang, Y.\*, Chen, G.\*, Chen, F., Hu, E., Dong, X., Li, Z., He, L., Sun, Y., Qiu, L., Xu, H., Cai, Z.# and Liu, X.#, 2021. Accurate transcriptome assembly by Nanopore RNA-seq reveals novel functional transcripts in hepatocellular carcinoma. Under review.
+Fang, Y.\*, Chen, G.\*, Chen, F., Hu, E., Dong, X., Li, Z., He, L., Sun, Y., Qiu, L., Xu, H., Cai, Z.# and Liu, X.#, 2021. Accurate transcriptome assembly by Nanopore RNA-seq reveals novel functional transcripts in hepatocellular carcinoma. Accepted.
 
 ## Step 1: find retained introns
 
